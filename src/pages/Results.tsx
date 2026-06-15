@@ -46,7 +46,7 @@ const reviewCategories = [
 ];
 
 export default function Results() {
-  const { resultData } = useProjectStore();
+  const { resultData, toggleReviewItem } = useProjectStore();
   const { views, donations, amount, shares, dailyData, visitRecords, reviewItems } = resultData;
 
   const [trendType, setTrendType] = useState<TrendType>('views');
@@ -74,9 +74,8 @@ export default function Results() {
 
   const currentTrendConfig = trendTabs.find((t) => t.key === trendType) || trendTabs[0];
 
-  const toggleReviewItem = (id: string) => {
-    // In a real app, this would update the store
-    console.log('Toggle item:', id);
+  const toggleReviewItemHandler = (id: string) => {
+    toggleReviewItem(id);
   };
 
   const getFilteredReviewItems = (category: string) => {
@@ -343,7 +342,7 @@ export default function Results() {
                           {items.map((item) => (
                             <div
                               key={item.id}
-                              onClick={() => toggleReviewItem(item.id)}
+                              onClick={() => toggleReviewItemHandler(item.id)}
                               className="flex items-start gap-3 p-3 rounded-lg hover:bg-warm-50 cursor-pointer transition-colors group"
                             >
                               {item.isCompleted ? (

@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { Sparkles, Save, FileText, Heart, RefreshCw, Mail } from 'lucide-react';
+import { Sparkles, Save, FileText, Heart, RefreshCw, Mail, Check } from 'lucide-react';
 import { PageHeader } from '../components/Layout/PageHeader';
 import { useProjectStore } from '../store/useProjectStore';
 import type { CopywritingType } from '../types';
@@ -25,6 +25,7 @@ export default function Copywriting() {
   const [style, setStyle] = useState('warm');
   const [isGenerating, setIsGenerating] = useState(false);
   const [displayedText, setDisplayedText] = useState('');
+  const [saved, setSaved] = useState(false);
 
   const currentCopywriting = copywritings.find((c) => c.type === activeType);
 
@@ -33,7 +34,7 @@ export default function Copywriting() {
       setContent(currentCopywriting.content);
       setDisplayedText(currentCopywriting.content);
     }
-  }, [activeType, currentCopywriting]);
+  }, [activeType, currentCopywriting?.id]);
 
   const handleGenerate = () => {
     if (isGenerating) return;
@@ -71,6 +72,8 @@ export default function Copywriting() {
 
   const handleSave = () => {
     updateCopywriting(activeType, content);
+    setSaved(true);
+    setTimeout(() => setSaved(false), 2000);
   };
 
   const formatDate = (dateStr: string) => {
@@ -138,8 +141,8 @@ export default function Copywriting() {
                     onClick={handleSave}
                     className="flex items-center gap-2 px-5 py-2.5 bg-white text-primary-500 border border-primary-200 rounded-full font-medium transition-all duration-200 hover:bg-primary-50 hover:border-primary-300 active:scale-95"
                   >
-                    <Save size={18} />
-                    <span>保存</span>
+                    {saved ? <Check size={18} /> : <Save size={18} />}
+                    <span>{saved ? '已保存' : '保存'}</span>
                   </button>
                 </div>
               </div>

@@ -10,6 +10,9 @@ import {
   Trophy,
   Clock,
   Plus,
+  X,
+  Save,
+  Link,
 } from 'lucide-react';
 
 const tabs: { key: MaterialType; label: string; icon: typeof ImageIcon }[] = [
@@ -27,10 +30,36 @@ const typeLabels: Record<MaterialType, { label: string; color: string; bg: strin
 };
 
 export default function Materials() {
-  const { materials } = useProjectStore();
+  const { materials, addMaterial } = useProjectStore();
   const [activeTab, setActiveTab] = useState<MaterialType>('image');
+  const [showForm, setShowForm] = useState(false);
+  const [formType, setFormType] = useState<MaterialType>('image');
+  const [formTitle, setFormTitle] = useState('');
+  const [formDescription, setFormDescription] = useState('');
+  const [formUrl, setFormUrl] = useState('');
 
   const filteredMaterials = materials.filter((m) => m.type === activeTab);
+
+  const openAddForm = (type?: MaterialType) => {
+    setFormType(type || activeTab);
+    setFormTitle('');
+    setFormDescription('');
+    setFormUrl('');
+    setShowForm(true);
+  };
+
+  const handleSave = () => {
+    if (!formTitle.trim()) return;
+    addMaterial({
+      type: formType,
+      title: formTitle.trim(),
+      description: formDescription.trim(),
+      url: formUrl.trim(),
+      isCover: false,
+    });
+    setShowForm(false);
+    setActiveTab(formType);
+  };
 
   return (
     <div className="min-h-screen bg-warm-100">
@@ -38,7 +67,10 @@ export default function Materials() {
         title="资料管理"
         subtitle="管理项目相关的图片、案例、票据和成果资料"
         action={
-          <button className="btn-primary flex items-center gap-2">
+          <button
+            className="btn-primary flex items-center gap-2"
+            onClick={() => openAddForm()}
+          >
             <Upload size={18} />
             <span>上传资料</span>
           </button>
@@ -77,6 +109,97 @@ export default function Materials() {
             </div>
           </div>
 
+          {showForm && (
+            <div className="card-warm mb-6 border-2 border-primary-200">
+              <div className="flex items-center justify-between mb-5">
+                <h3 className="font-serif font-semibold text-gray-800 text-lg">添加新资料</h3>
+                <button
+                  onClick={() => setShowForm(false)}
+                  className="p-2 rounded-lg text-gray-400 hover:text-gray-600 hover:bg-gray-100 transition-colors"
+                >
+                  <X size={20} />
+                </button>
+              </div>
+
+              <div className="space-y-4">
+                <div>
+                  <label className="text-sm text-gray-500 mb-1.5 block">资料分类</label>
+                  <div className="flex gap-2">
+                    {tabs.map((tab) => {
+                      const Icon = tab.icon;
+                      return (
+                        <button
+                          key={tab.key}
+                          onClick={() => setFormType(tab.key)}
+                          className={`flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-medium transition-all ${
+                            formType === tab.key
+                              ? 'bg-primary-500 text-white shadow-warm'
+                              : 'bg-gray-50 text-gray-600 hover:bg-primary-50'
+                          }`}
+                        >
+                          <Icon size={16} />
+                          <span>{tab.label}</span>
+                        </button>
+                      );
+                    })}
+                  </div>
+                </div>
+
+                <div>
+                  <label className="text-sm text-gray-500 mb-1.5 block">标题 *</label>
+                  <input
+                    type="text"
+                    value={formTitle}
+                    onChange={(e) => setFormTitle(e.target.value)}
+                    placeholder="请输入资料标题"
+                    className="input-field"
+                  />
+                </div>
+
+                <div>
+                  <label className="text-sm text-gray-500 mb-1.5 block">说明</label>
+                  <textarea
+                    value={formDescription}
+                    onChange={(e) => setFormDescription(e.target.value)}
+                    placeholder="请输入资料描述说明"
+                    className="input-field min-h-[80px] resize-y"
+                  />
+                </div>
+
+                <div>
+                  <label className="text-sm text-gray-500 mb-1.5 flex items-center gap-1.5">
+                    <Link size={14} />
+                    {formType === 'image' ? '图片地址' : '链接地址'}
+                  </label>
+                  <input
+                    type="text"
+                    value={formUrl}
+                    onChange={(e) => setFormUrl(e.target.value)}
+                    placeholder={formType === 'image' ? '请输入图片URL地址' : '请输入相关链接地址（选填）'}
+                    className="input-field"
+                  />
+                </div>
+
+                <div className="flex justify-end gap-3 pt-2">
+                  <button
+                    onClick={() => setShowForm(false)}
+                    className="btn-ghost"
+                  >
+                    取消
+                  </button>
+                  <button
+                    onClick={handleSave}
+                    disabled={!formTitle.trim()}
+                    className="btn-primary flex items-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
+                  >
+                    <Save size={16} />
+                    <span>保存</span>
+                  </button>
+                </div>
+              </div>
+            </div>
+          )}
+
           {activeTab === 'image' ? (
             <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-5">
               {filteredMaterials.map((material) => (
@@ -84,12 +207,18 @@ export default function Materials() {
                   key={material.id}
                   className="card-warm group cursor-pointer overflow-hidden p-0"
                 >
-                  <div className="relative h-40 overflow-hidden">
-                    <img
-                      src={material.url}
-                      alt={material.title}
-                      className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110"
-                    />
+                  <div className="relative h-40 overflow-hidden bg-gray-100">
+                    {material.url ? (
+                      <img
+                        src={material.url}
+                        alt={material.title}
+                        className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110"
+                      />
+                    ) : (
+                      <div className="w-full h-full flex items-center justify-center">
+                        <ImageIcon className="text-gray-300" size={40} />
+                      </div>
+                    )}
                     {material.isCover && (
                       <div className="absolute top-2 left-2">
                         <span className="tag bg-primary-500 text-white text-xs">封面</span>
@@ -114,7 +243,10 @@ export default function Materials() {
                 </div>
               ))}
 
-              <div className="card-warm flex flex-col items-center justify-center cursor-pointer hover:border-primary-300 border-2 border-dashed border-gray-200 min-h-[280px]">
+              <div
+                onClick={() => openAddForm('image')}
+                className="card-warm flex flex-col items-center justify-center cursor-pointer hover:border-primary-300 border-2 border-dashed border-gray-200 min-h-[280px]"
+              >
                 <div className="w-14 h-14 rounded-full bg-primary-50 flex items-center justify-center mb-3">
                   <Plus className="text-primary-400" size={28} />
                 </div>
@@ -164,7 +296,10 @@ export default function Materials() {
                     <FileText className="text-gray-300" size={32} />
                   </div>
                   <p className="text-gray-500">暂无{typeLabels[activeTab].label}资料</p>
-                  <button className="btn-primary mt-4 inline-flex items-center gap-2">
+                  <button
+                    className="btn-primary mt-4 inline-flex items-center gap-2"
+                    onClick={() => openAddForm()}
+                  >
                     <Plus size={16} />
                     <span>上传{typeLabels[activeTab].label}</span>
                   </button>
